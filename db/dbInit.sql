@@ -12,23 +12,151 @@ SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
-CREATE DATABASE IF NO EXISTS dbTeste;
+CREATE DATABASE dbTeste;
 
 USE dbTeste;
 
 GRANT ALL PRIVILEGES ON dbTeste.* TO 'teste'@'localhost' IDENTIFIED BY '123';
 
+-- < CREATE TABLES >
+
 CREATE TABLE IF NOT EXISTS `user`(
-  `id` int(11) PRIMARY KEY NOT NULL AUTO_INCREMENT ,
-  `username` varchar(50) NOT NULL,
-  `name` varchar(300) NOT NULL,
-  `password` varchar(800) NOT NULL,
-  `email` varchar(255) NOT NULL
+  `user_id`               INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `email`                 VARCHAR(255) NOT NULL UNIQUE,
+  `name`                  VARCHAR(300) NOT NULL,
+  `date_of_birth`         DATE,
+  `username`              VARCHAR(50) NOT NULL,
+  `phone`                 VARCHAR(30),
+  `password`              VARCHAR(800) NOT NULL,
+  `date_joined`           DATETIME NOT NULL,
+  `modified`              DATETIME,
+  `type`                  SMALLINT,
+  `active`                BOOLEAN NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `address`(
+  `address_id`            INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `user_id`               INT(11) NOT NULL,
+  `fullname`              VARCHAR(200) NOT NULL,
+  `address1`              VARCHAR(200) NOT NULL,
+  `address2`              VARCHAR(200),
+  `postcode`              VARCHAR(10) NOT NULL,
+  `city`                  VARCHAR(200) NOT NULL,
+  `phone`                 VARCHAR(30),
+  CONSTRAINT fk_user_address
+    FOREIGN KEY (`user_id`)
+      REFERENCES `user`(`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `discount`(
+  `discount_id`           INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `name`                  VARCHAR(100) NOT NULL,
+  `discount`              FLOAT(100, 2) NOT NULL,
+  `type`                  INT,
+  `created`               DATETIME NOT NULL,
+  `valid`                 DATETIME NOT NULL,
+  `quantity`              INT(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `order`(
+  `order_id`              INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `user_id`               INT(11) NOT NULL,
+  `address_id`            INT(11) NOT NULL,
+  `discount_id`           INT(11) NOT NULL,
+  `created`               DATETIME NOT NULL,
+  `modified`              DATETIME,
+  `status`                VARCHAR(200),
+  `amount`                INT,
+  CONSTRAINT fk_address_order
+    FOREIGN KEY (`address_id`)
+      REFERENCES `address`(`address_id`),
+  CONSTRAINT fk_discount_order
+    FOREIGN KEY (`discount_id`)
+      REFERENCES `discount`(`discount_id`),
+  CONSTRAINT fk_user_order
+    FOREIGN KEY (`user_id`)
+      REFERENCES `user`(`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `category`(
+  `category_id`           INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `name`                  VARCHAR(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `product`(
+  `product_id`            INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `category_id`           INT(11) NOT NULL,
+  `name`                  VARCHAR(250) NOT NULL,
+  `description`           VARCHAR(100),
+  `video_url`             VARCHAR(250),
+  `price`                 DECIMAL(18,4),
+  CONSTRAINT fk_category_id_product
+    FOREIGN KEY (`category_id`)
+      REFERENCES `category`(`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `product_details`(
+  `product_details_id`    INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `product_id`            INT(11) NOT NULL,
+  `size`                  VARCHAR(100) NOT NULL,
+  CONSTRAINT fk_product_product_details
+    FOREIGN KEY (`product_id`)
+      REFERENCES `product`(`product_id`)
+)
+
+CREATE TABLE IF NOT EXISTS `order_item`(
+  `order_item_id`         INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `order_id`              INT(11) NOT NULL,
+  `product_details_id`    INT(11) NOT NULL,
+  `quantity`              INT(11) NOT NULL,
+  CONSTRAINT fk_order_order_item
+    FOREIGN KEY (`order_id`)
+      REFERENCES `order`(`order_id`),
+  CONSTRAINT fk_product_details_order_item
+    FOREIGN KEY (`product_details_id`)
+      REFERENCES `product_details`(`product_details_id`)
+)
+
+CREATE TABLE IF NOT EXISTS `tag`(
+  `tag_id`                INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `name`                  VARCHAR(200) NOT NULL,
+  `description`           VARCHAR(500) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `tags`(
+  `product_id`            INT(11) NOT NULL,
+  `tag_id`                INT(11) NOT NULL,
+  CONSTRAINT fk_product_tags
+    FOREIGN KEY (`product_id`)
+      REFERENCES `product`(`product_id`),
+  CONSTRAINT fk_tag_tags
+    FOREIGN KEY (`tag_id`)
+      REFERENCES `tag`(`tag_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `cart_item`(
+  `cart_item_id`          INT(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `user_id`               INT(11) NOT NULL,
+  `product_details_id`    INT(11) NOT NULL,
+  `saved_for_later`       BOOLEAN NOT NULL,
+  `quantity`              INT(11) NOT NULL,
+  `time_added`            DATETIME NOT NULL,
+  CONSTRAINT fk_user_cart_item
+    FOREIGN KEY (`user_id`)
+      REFERENCES `user`(`user_id`),
+  CONSTRAINT fk_product_details_cart_item
+    FOREIGN KEY (`product_details_id`)
+      REFERENCES `product_details`(`product_details_id`)
+)
+
+-- </ CREATE TABLES >
 
 --
 -- Dumping data for table `user`
 --
+
+
+
 
 INSERT INTO `user` ( `username`, `name`, `password`, `email`) VALUES
 ('Desiblesen', 'Pedro', 'vaey7du5Y', 'PedroSouzaGoncalves@teleworm.us'),
